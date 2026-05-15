@@ -1,0 +1,3 @@
+//this is the .gitignore file for the backend, it tells git which files and directories to ignore when committing code to the repository
+node_modules
+.env

@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
+// Define the User schema
 const userSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -30,18 +31,33 @@ const userSchema = new mongoose.Schema({
         default: null
     }
 });
+// Hash the password before saving the user
+userSchema.pre('save', async function(next) {
+    if (!this.isModified('password')) {
+        return next();
+    }
+    try {
+        const salt = await bcrypt.genSalt(10);
+        this.password = await bcrypt.hash(this.password, salt);
+        next();
+    } catch (error) {
+        next(error);
+    }
+});
+// Generate JWT token for authentication
 userSchema.methods.generateAuthToken = function() {
     const token = jwt.sign({ id: this._id, role: this.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
     return token;
 };
-
+// Compare the provided password with the hashed password in the database
 userSchema.methods.comparePassword = async function(candidatePassword) {
     return await bcrypt.compare(candidatePassword, this.password);
 };
-userSchema.static.hashPassword = async function(password) {
+// Static method to hash a password (corrected to .statics)
+userSchema.statics.hashPassword = async function(password) {
     const salt = await bcrypt.genSalt(10);
     return await bcrypt.hash(password, salt);
-}
+};
 
 const User = mongoose.model('User', userSchema);
 

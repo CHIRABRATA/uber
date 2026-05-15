@@ -3,6 +3,7 @@ const router=express.Router();
 const User=require('../models/user.model');
 const{body,validationResult}=require('express-validator');
 // Register a new user post method here only have the route in controller have the logic
+const userController = require('../controllers/user.controller');
 
 router.post('/register',[
     body('name').notEmpty().withMessage('Name is required'),

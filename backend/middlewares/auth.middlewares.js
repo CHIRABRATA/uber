@@ -10,7 +10,14 @@ const bycript = require('bcrypt');
 
 module.exports = {
     auth: async (req, res, next) => {
-        const token = req.cookies?.token || req.header('Authorization')?.replace('Bearer ', '');
+        const cookieHeader = req.headers.cookie || '';
+        const cookieToken = cookieHeader
+            .split(';')
+            .map(cookie => cookie.trim())
+            .find(cookie => cookie.startsWith('token='))
+            ?.slice('token='.length);
+
+        const token = req.cookies?.token || cookieToken || req.header('Authorization')?.replace('Bearer ', '').trim();
         if (!token) {
             return res.status(401).json({ message: 'No token, authorization denied' });
         }   

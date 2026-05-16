@@ -2,9 +2,11 @@ const userModel = require('../models/user.model');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const services = require('../services/user.service');
-const {validationResult} = require('express-validator');
+const { validationResult } = require('express-validator');
+const { stack } = require('../app');
 
 module.exports = {
+    // 1. REGISTER FUNCTION
     register: async (req, res) => {
         const { name, email, password, role } = req.body;
         const errors = validationResult(req);
@@ -13,83 +15,96 @@ module.exports = {
         }
 
         try {
-            //check all filed are filled or not
-                if (!name || !email || !password || !role) {
-                    return res.status(400).json({ message: 'Please fill in all fields' });
-                }
+            if (!name || !email || !password || !role) {
+                return res.status(400).json({ message: 'Please fill in all fields' });
+            }
+
             // Check if the user already exists
-            let user = await userModel
-                .findOne({ email })
-                .select('+password');
+            let user = await userModel.findOne({ email }).select('+password');
             if (user) {
                 return res.status(400).json({ message: 'User already exists' });
             }
+
             // Create a new user
-            user = new userModel({
-                name,
-                email,
-                password,
-                role
-            });
+            user = new userModel({ name, email, password, role });
             await user.save();
+
             // Generate a JWT token
             const token = user.generateAuthToken();
             res.cookie('token', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    maxAge: 3600000
-});
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'strict',
+                maxAge: 3600000
+            });
 
-res.status(201).json({ token });
-
+            return res.status(201).json({ token, user });
         } catch (error) {
             console.error(error);
-            res.status(500).json({ message: 'Server error' });
+            return res.status(500).json({ message: 'Server error' });
         }
-    }
-};
+    },
 
-//this is the login function for the user controller which will handle 
-// the login logic and return a JWT token if the credentials are valid. 
-// It will also set a cookie with the token for authentication purposes.
-module.exports = {
+    // 2. LOGIN FUNCTION
     login: async (req, res) => {
         const { email, password } = req.body;
         const errors = validationResult(req);   
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
         }
+
         try {
             // Check if the user exists
-            const user = await userModel
-                .findOne({ email })
-                .select('+password');
+            const user = await userModel.findOne({ email }).select('+password');
             if (!user) {
                 return res.status(400).json({ message: 'Invalid credentials' });
             }
-            if(user){
-                console.log('User found:', user);
-            }
+
             // Compare the provided password with the hashed password in the database
             const isMatch = await user.comparePassword(password);
             if (!isMatch) {
                 return res.status(400).json({ message: 'Invalid credentials' });
             }
+
             // Generate a JWT token
             const token = user.generateAuthToken();
             res.cookie('token', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    maxAge: 3600000
-});
-res.status(200).json({ message: 'Login successful'});
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'strict',
+                maxAge: 3600000
+            });
+
+            return res.status(200).json({ message: 'Login successful', token });
         } catch (error) {
             console.error(error);
-            res.status(500).json({ message: 'Server error' });
+            return res.status(500).json({ message: 'Server error' });
+        }
+    },
+
+  
+  // 3. PROFILE FUNCTION
+    profile: async (req, res) => {
+        try {   
+            // The auth middleware already found the user and attached it to req.user
+            if (!req.user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+            return res.status(200).json({ user: req.user });
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    },
+
+    // 4. LOGOUT FUNCTION
+    logout: async (req, res) => {
+        try {
+            res.clearCookie('token');
+            return res.status(200).json({ message: 'Logout successful' });
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ message: 'Server error' });
         }
     }
 };
-
-

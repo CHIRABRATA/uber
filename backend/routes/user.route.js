@@ -19,4 +19,19 @@ router.post('/register',[
     await userController.register(req, res);
 });
 
+
+//lagin route is from here 
+
+router.post('/login',[
+    body('email').isEmail().withMessage('Please provide a valid email'),
+    body('password').notEmpty().withMessage('Password is required')
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+    // Call the login function from the controller
+    await userController.login(req, res);
+});
+
 module.exports=router;

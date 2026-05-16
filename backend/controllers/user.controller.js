@@ -50,3 +50,46 @@ res.status(201).json({ token });
     }
 };
 
+//this is the login function for the user controller which will handle 
+// the login logic and return a JWT token if the credentials are valid. 
+// It will also set a cookie with the token for authentication purposes.
+module.exports = {
+    login: async (req, res) => {
+        const { email, password } = req.body;
+        const errors = validationResult(req);   
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
+        try {
+            // Check if the user exists
+            const user = await userModel
+                .findOne({ email })
+                .select('+password');
+            if (!user) {
+                return res.status(400).json({ message: 'Invalid credentials' });
+            }
+            if(user){
+                console.log('User found:', user);
+            }
+            // Compare the provided password with the hashed password in the database
+            const isMatch = await user.comparePassword(password);
+            if (!isMatch) {
+                return res.status(400).json({ message: 'Invalid credentials' });
+            }
+            // Generate a JWT token
+            const token = user.generateAuthToken();
+            res.cookie('token', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge: 3600000
+});
+res.status(200).json({ message: 'Login successful'});
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: 'Server error' });
+        }
+    }
+};
+
+

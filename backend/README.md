@@ -168,7 +168,100 @@ Other `400` responses:
 }
 ```
 
+## 3. Profile
+
+### `GET /api/users/profile`
+
+Returns the currently authenticated user's profile.
+
+### Description
+
+This route is protected by the auth middleware. Send the JWT in the `token` cookie or in the `Authorization: Bearer <token>` header.
+
+### Example Response
+
+#### `200 OK`
+
+```json
+{
+  "user": {
+    "_id": "66f000000000000000000001",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "role": "rider",
+    "socketId": null
+  }
+}
+```
+
+### Other Status Codes
+
+#### `401 Unauthorized`
+
+Returned when the token is missing, invalid, or revoked.
+
+```json
+{
+  "message": "No token, authorization denied"
+}
+```
+
+or
+
+```json
+{
+  "message": "Token has been revoked"
+}
+```
+
+#### `404 Not Found`
+
+```json
+{
+  "message": "User not found"
+}
+```
+
+#### `500 Internal Server Error`
+
+```json
+{
+  "message": "Server error"
+}
+```
+
+## 4. Logout User
+
+### `POST /api/users/logout`
+
+Logs out the current user by clearing the cookie and blacklisting the current JWT until it expires.
+
+### Description
+
+The logout route reads the current token, stores it in the blacklist collection with a TTL based on the token expiration, and clears the `token` cookie.
+
+### Example Response
+
+#### `200 OK`
+
+```json
+{
+  "message": "Logout successful"
+}
+```
+
+### Other Status Codes
+
+#### `500 Internal Server Error`
+
+```json
+{
+  "message": "Server error"
+}
+```
+
 ## Notes
 
 - The server parses JSON requests with `express.json()`.
 - The token cookie is set with `httpOnly`, `sameSite: 'strict'`, and `secure` enabled in production.
+- Protected routes such as `GET /api/users/profile` reject revoked tokens through the blacklist check.

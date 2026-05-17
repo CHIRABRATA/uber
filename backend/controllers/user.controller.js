@@ -4,6 +4,8 @@ const jwt = require('jsonwebtoken');
 const services = require('../services/user.service');
 const { validationResult } = require('express-validator');
 const { stack } = require('../app');
+const TokenBlacklist = require('../models/tokenBlacklist.model');
+const authMiddleware = require('../middlewares/auth.middlewares');
 
 module.exports = {
     // 1. REGISTER FUNCTION
@@ -105,6 +107,19 @@ module.exports = {
     // 4. LOGOUT FUNCTION
     logout: async (req, res) => {
         try {
+            const token = authMiddleware.extractToken(req);
+
+            if (token) {
+                const decoded = jwt.decode(token);
+                if (decoded?.exp) {
+                    await TokenBlacklist.findOneAndUpdate(
+                        { token },
+                        { token, expiresAt: new Date(decoded.exp * 1000) },
+                        { upsert: true, new: true, setDefaultsOnInsert: true }
+                    );
+                }
+            }
+
             res.clearCookie('token');
             return res.status(200).json({ message: 'Logout successful' });
         } catch (error) {

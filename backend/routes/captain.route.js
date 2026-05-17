@@ -4,7 +4,6 @@ const { body } = require('express-validator');
 
 // FIX: Import the captain controller instead of the user controller
 const captainController = require('../controllers/captain.controller');
-const authMiddleware = require('../middlewares/auth.middleware');
 
 // 1. CAPTAIN REGISTRATION ROUTE (With detailed validations)
 router.post('/register', [

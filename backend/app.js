@@ -13,10 +13,15 @@ app.use(express.json());
 //path name is /api/users/register for register route and /api/users/login for login route
 app.use('/api/users', userRoutes);
 
+//add the captain route here
+app.use('/api/captains', require('./routes/captain.route'));
+
 
 app.get('/', (req, res) => {
     res.send('Hello World!');
 });
+
+
 
 connectDB();
 

@@ -21,5 +21,8 @@ router.post('/login', [
     body('email').isEmail().withMessage('Please provide a valid email address'),
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long')
 ], captainController.login);
+//from here have logout route for captain 
+
+router.post('/logout', captainController.logout);
 
 module.exports = router;

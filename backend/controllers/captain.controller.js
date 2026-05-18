@@ -1,5 +1,8 @@
 const captainModel = require('../models/captain.model');
 const { validationResult } = require('express-validator');
+const jwt = require('jsonwebtoken');
+const TokenBlacklist = require('../models/tokenBlacklist.model');
+const authMiddleware = require('../middlewares/auth.middlewares');
 
 module.exports = {
     // 1. CAPTAIN REGISTRATION
@@ -89,6 +92,33 @@ module.exports = {
             });
 
             return res.status(200).json({ message: 'Login successful', token });
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    },
+
+    //captain logout function is from here
+    
+    logout: async (req, res) => {
+        try {
+            const token = authMiddleware.extractToken(req);
+//here we are blacklisting the token by storing it in the database with its expiration time,
+//  so that we can check against this blacklist for any incoming requests
+//  to ensure that the token is not valid anymore.
+            if (token) {
+                const decoded = jwt.decode(token);
+                if (decoded?.exp) {
+                    await TokenBlacklist.findOneAndUpdate(
+                        { token },
+                        { token, expiresAt: new Date(decoded.exp * 1000) },
+                        { upsert: true, new: true, setDefaultsOnInsert: true }
+                    );
+                }
+            }
+
+            res.clearCookie('token');
+            return res.status(200).json({ message: 'Logout successful' });
         } catch (error) {
             console.error(error);
             return res.status(500).json({ message: 'Server error' });

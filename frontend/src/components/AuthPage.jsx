@@ -662,7 +662,7 @@ export default function AuthPage({ defaultRole = 'user', defaultMode = 'login' }
                       onBlur={e => { e.target.style.borderColor = ''; e.target.style.boxShadow = ''; }}
                     >
                       <option value="rider">Rider</option>
-                      <option value="driver">Driver</option>
+                      
                     </select>
                   </div>
                 </div>

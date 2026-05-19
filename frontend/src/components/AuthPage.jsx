@@ -411,16 +411,16 @@ export default function AuthPage({ defaultRole = 'user', defaultMode = 'login' }
 
     /* Submit button */
     .ap-submit {
-      display: flex; align-items: center; justify-content: center; gap: 12px;
-      width: 100%; padding: 17px 24px;
-      border: none; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width: 100%; padding: 14px 20px;
+      border: none; border-radius: 12px;
       color: #030308;
       font-family: 'Syne', sans-serif;
-      font-size: 14px; font-weight: 800;
+      font-size: 13px; font-weight: 800;
       letter-spacing: 0.12em; text-transform: uppercase;
       cursor: pointer;
       transition: transform 0.28s cubic-bezier(0.22,1,0.36,1), box-shadow 0.28s ease, opacity 0.2s;
-      margin-top: 8px;
+      margin-top: 4px;
       position: relative; overflow: hidden;
     }
     .ap-submit::before {

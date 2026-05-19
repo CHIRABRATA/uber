@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const cars = [
   {
@@ -109,9 +110,7 @@ export default function UberLanding() {
   const [introPhase, setIntroPhase] = useState(0); // 0=logo, 1=reveal, 2=done
   const [wordIdx, setWordIdx] = useState(0);
   const [activeCar, setActiveCar] = useState(0);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [picked, setPicked] = useState(null);
-  const wordRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const t1 = setTimeout(() => setIntroPhase(1), 1200);
@@ -702,8 +701,8 @@ export default function UberLanding() {
           <button className="nav-link">Safety</button>
         </div>
         <div style={{display:"flex", gap:10}}>
-          <button className="nav-btn login" onClick={() => setPicked("login")}>Login</button>
-          <button className="nav-btn register" onClick={() => setPicked("register")}>Register</button>
+          <button className="nav-btn login" onClick={() => navigate('/auth?mode=login')}>Login</button>
+          <button className="nav-btn register" onClick={() => navigate('/auth?mode=signup')}>Register</button>
         </div>
       </nav>
 
@@ -727,10 +726,10 @@ export default function UberLanding() {
               Uber connects you to more possibilities.
             </p>
             <div className="cta-row">
-              <button className="cta-btn cta-primary" onClick={() => setPicked("register")}>
+              <button className="cta-btn cta-primary" onClick={() => navigate('/auth?mode=signup')}>
                 Get Started
               </button>
-              <button className="cta-btn cta-secondary" onClick={() => setPicked("login")}>
+              <button className="cta-btn cta-secondary" onClick={() => navigate('/auth?mode=login')}>
                 Sign In
               </button>
             </div>
@@ -764,8 +763,8 @@ export default function UberLanding() {
                   </div>
                 </div>
                 <button className="book-btn" style={{background: car.color}}
-                  onClick={() => setPicked("register")}>
-                  Book {car.name} →
+                  onClick={() => navigate('/auth?mode=signup')}
+                >
                 </button>
               </div>
               <div className="car-dots">
@@ -809,7 +808,7 @@ export default function UberLanding() {
             Your city.<br />Your ride.
           </h2>
           <p className="bottom-cta-sub">Join millions who move smarter every day.</p>
-          <button className="cta-btn cta-primary" onClick={() => setPicked("register")}
+          <button className="cta-btn cta-primary" onClick={() => navigate('/auth?mode=signup')}
             style={{fontSize:17, padding:"18px 52px"}}>
             Get Started Free
           </button>

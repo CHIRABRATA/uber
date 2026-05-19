@@ -4,17 +4,17 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 const ROLE_THEMES = {
   user: {
     accent: '#00D4AA',
-    glow: 'rgba(0, 212, 170, 0.18)',
+    glow: 'rgba(0, 212, 170, 0.25)',
     title: 'Rider account',
     subtitle: 'Book rides with a user profile',
-    copy: 'Login or sign up as a rider and use the user Express endpoints that already power the backend.',
+    copy: 'Sign in to access your ride history, saved places, and book your next trip.',
   },
   captain: {
     accent: '#FF6B35',
-    glow: 'rgba(255, 107, 53, 0.18)',
-    title: 'Driver account',
-    subtitle: 'Drive with a captain profile',
-    copy: 'Login or sign up as a driver and connect directly to the captain auth endpoints.',
+    glow: 'rgba(255, 107, 53, 0.25)',
+    title: 'Captain profile',
+    subtitle: 'Drive and earn on your schedule',
+    copy: 'Manage your vehicle, track your earnings, and hit the road to accept requests.',
   },
 };
 
@@ -26,6 +26,14 @@ const initialForm = {
   vehicleType: 'car',
   capacity: '4',
 };
+
+// --- SVG Icons (Lucide-like) ---
+const IconUser = () => (<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>);
+const IconMail = () => (<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>);
+const IconLock = () => (<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>);
+const IconCar = () => (<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a2 2 0 0 0-1.6-.8H8.3a2 2 0 0 0-1.6.8L4 11l-5.16.86a1 1 0 0 0-.84.99V16h3m10 0a2 2 0 1 1-4 0m4 0a2 2 0 1 0-4 0m-6 0a2 2 0 1 1-4 0m4 0a2 2 0 1 0-4 0"/></svg>);
+const IconUsers = () => (<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>);
+const IconArrowRight = () => (<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>);
 
 export default function AuthPage({ defaultRole = 'user', defaultMode = 'login' }) {
   const navigate = useNavigate();
@@ -65,7 +73,7 @@ export default function AuthPage({ defaultRole = 'user', defaultMode = 'login' }
     setStatus({ type: '', message: '' });
 
     const endpointBase = role === 'captain' ? '/api/captains' : '/api/users';
-    const endpoint = `${endpointBase}/${mode}`;
+    const endpoint = `${endpointBase}/${mode === 'signup' ? 'register' : 'login'}`;
     const payload =
       mode === 'login'
         ? {
@@ -97,11 +105,20 @@ export default function AuthPage({ defaultRole = 'user', defaultMode = 'login' }
         body: JSON.stringify(payload),
       });
 
-      const data = await response.json();
+      const rawBody = await response.text();
+      let data = null;
+
+      if (rawBody) {
+        try {
+          data = JSON.parse(rawBody);
+        } catch {
+          data = null;
+        }
+      }
 
       if (!response.ok) {
         const firstError = data?.errors?.[0]?.msg;
-        throw new Error(firstError || data?.message || 'Unable to complete request');
+        throw new Error(firstError || data?.message || rawBody || `Request failed with status ${response.status}`);
       }
 
       setStatus({

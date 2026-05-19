@@ -145,549 +145,635 @@ export default function AuthPage({ defaultRole = 'user', defaultMode = 'login' }
 
         .auth-shell {
           min-height: 100vh;
-          background:
-            radial-gradient(circle at top left, rgba(255,255,255,0.08), transparent 28%),
-            radial-gradient(circle at bottom right, var(--glow), transparent 34%),
-            linear-gradient(135deg, #05050f, #090a16 55%, #05050f);
+          background: #05050f;
           color: #fff;
-          padding: 28px;
+          padding: 32px 5vw;
           position: relative;
           overflow: hidden;
+          display: flex;
+          flex-direction: column;
         }
 
+        /* Abstract glowing orbs in the background */
         .auth-shell::before,
         .auth-shell::after {
           content: '';
           position: absolute;
-          border-radius: 999px;
-          filter: blur(100px);
+          border-radius: 50%;
+          filter: blur(120px);
           pointer-events: none;
+          z-index: 0;
         }
 
         .auth-shell::before {
-          width: 420px;
-          height: 420px;
-          top: -120px;
-          right: -140px;
+          width: 600px;
+          height: 600px;
+          top: -200px;
+          right: -10vw;
           background: var(--glow);
-          opacity: 0.8;
+          opacity: 0.7;
+          animation: floatOrb 12s ease-in-out infinite alternate;
         }
 
         .auth-shell::after {
-          width: 320px;
-          height: 320px;
-          left: -120px;
-          bottom: -120px;
-          background: rgba(255,255,255,0.06);
+          width: 500px;
+          height: 500px;
+          bottom: -150px;
+          left: -10vw;
+          background: rgba(255,255,255,0.03);
+          animation: floatOrb 15s ease-in-out infinite alternate-reverse;
+        }
+
+        @keyframes floatOrb {
+          0% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(-30px, 20px) scale(1.05); }
+          100% { transform: translate(20px, -30px) scale(0.95); }
+        }
+
+        /* Grid Background Pattern */
+        .bg-grid {
+          position: absolute; inset: 0; z-index: 0; pointer-events: none;
+          background-image:
+            linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+          background-size: 60px 60px;
+          mask-image: radial-gradient(circle at center, black, transparent 80%);
+          -webkit-mask-image: radial-gradient(circle at center, black, transparent 80%);
         }
 
         .auth-topbar {
           position: relative;
-          z-index: 1;
+          z-index: 10;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 16px;
-          max-width: 1180px;
-          margin: 0 auto 24px;
+          width: 100%;
+          max-width: 1200px;
+          margin: 0 auto 40px;
         }
 
         .auth-brand {
           display: flex;
-          flex-direction: column;
-          gap: 4px;
+          align-items: baseline;
+          gap: 12px;
         }
 
         .auth-brand strong {
           font-family: 'Bebas Neue', sans-serif;
-          font-size: 34px;
+          font-size: 40px;
           letter-spacing: 0.08em;
           line-height: 1;
-        }
-
-        .auth-brand span,
-        .auth-kicker,
-        .auth-footer,
-        .hero-copy,
-        .field-hint,
-        .status-text {
-          font-family: 'DM Sans', sans-serif;
+          color: #fff;
+          filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));
         }
 
         .auth-brand span {
-          color: rgba(255,255,255,0.58);
+          color: rgba(255,255,255,0.5);
+          font-family: 'DM Sans', sans-serif;
           font-size: 13px;
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
+          display: none;
         }
+        @media(min-width: 768px) { .auth-brand span { display: block; } }
 
         .home-link {
-          border: 1px solid rgba(255,255,255,0.14);
           background: rgba(255,255,255,0.03);
+          border: 1px solid rgba(255,255,255,0.08);
           color: #fff;
-          padding: 12px 18px;
-          border-radius: 999px;
+          padding: 10px 20px;
+          border-radius: 99px;
           cursor: pointer;
           font-family: 'Syne', sans-serif;
           font-weight: 700;
-          letter-spacing: 0.06em;
+          font-size: 13px;
+          letter-spacing: 0.08em;
+          transition: all 0.3s ease;
+          backdrop-filter: blur(10px);
+        }
+        .home-link:hover {
+          background: rgba(255,255,255,0.1);
+          border-color: rgba(255,255,255,0.2);
+          transform: translateY(-2px);
         }
 
         .auth-grid {
           position: relative;
-          z-index: 1;
-          max-width: 1180px;
+          z-index: 10;
+          max-width: 1200px;
           margin: 0 auto;
           display: grid;
-          grid-template-columns: minmax(280px, 0.9fr) minmax(320px, 1.1fr);
-          gap: 24px;
-          align-items: stretch;
+          grid-template-columns: minmax(320px, 1fr) minmax(360px, 1.1fr);
+          gap: 32px;
+          align-items: center;
+          flex: 1;
         }
 
+        /* Glass Panels */
         .hero-panel,
         .form-panel {
-          border: 1px solid rgba(255,255,255,0.08);
+          position: relative;
           border-radius: 32px;
-          background: rgba(255,255,255,0.03);
-          backdrop-filter: blur(18px);
-          box-shadow: 0 20px 80px rgba(0,0,0,0.35);
+          background: rgba(10, 10, 20, 0.6);
+          border: 1px solid rgba(255,255,255,0.05);
+          box-shadow: 0 30px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          overflow: hidden;
         }
 
         .hero-panel {
-          padding: 36px;
+          padding: 48px;
           display: flex;
           flex-direction: column;
-          justify-content: space-between;
-          min-height: 680px;
-          background:
-            linear-gradient(180deg, rgba(255,255,255,0.05), transparent 45%),
-            radial-gradient(circle at top, var(--glow), transparent 55%),
-            rgba(255,255,255,0.03);
+          justify-content: center;
+          min-height: 600px;
+          background: linear-gradient(135deg, rgba(255,255,255,0.02) 0%, transparent 100%);
+        }
+
+        /* Shine reflection on panel */
+        .form-panel::before {
+          content: '';
+          position: absolute;
+          top: 0; left: -100%; width: 50%; height: 100%;
+          background: linear-gradient(to right, transparent, rgba(255,255,255,0.03), transparent);
+          transform: skewX(-20deg);
+          animation: shine 8s infinite;
+          pointer-events: none;
+        }
+
+        @keyframes shine {
+          0% { left: -100%; }
+          20% { left: 200%; }
+          100% { left: 200%; }
         }
 
         .auth-kicker {
           color: var(--accent);
+          font-family: 'DM Sans', sans-serif;
           text-transform: uppercase;
           letter-spacing: 0.28em;
-          font-size: 12px;
-          margin-bottom: 18px;
+          font-weight: 700;
+          font-size: 11px;
+          margin-bottom: 24px;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .auth-kicker::before {
+          content: '';
+          display: block;
+          width: 8px; height: 8px;
+          border-radius: 50%;
+          background: var(--accent);
+          box-shadow: 0 0 12px var(--accent);
         }
 
         .hero-title {
           font-family: 'Bebas Neue', sans-serif;
-          font-size: clamp(56px, 6vw, 92px);
-          line-height: 0.9;
-          margin: 0 0 20px;
-          max-width: 8ch;
+          font-size: clamp(64px, 7vw, 100px);
+          line-height: 0.88;
+          margin: 0 0 24px;
+          letter-spacing: 0.02em;
+          color: #fff;
+          text-shadow: 0 4px 20px rgba(0,0,0,0.5);
         }
 
         .hero-copy {
-          color: rgba(255,255,255,0.7);
+          color: rgba(255,255,255,0.65);
+          font-family: 'DM Sans', sans-serif;
           line-height: 1.8;
-          max-width: 34ch;
           font-size: 16px;
-          margin-bottom: 28px;
+          margin-bottom: 32px;
+          max-width: 400px;
         }
 
-        .role-strip,
-        .mode-strip {
+        /* Animated segmented controls */
+        .segmented-control {
           display: inline-flex;
-          gap: 10px;
+          background: rgba(0,0,0,0.3);
+          border: 1px solid rgba(255,255,255,0.06);
+          border-radius: 99px;
           padding: 6px;
-          border-radius: 999px;
-          background: rgba(255,255,255,0.05);
-          border: 1px solid rgba(255,255,255,0.08);
-          margin-bottom: 28px;
-          width: fit-content;
+          margin-bottom: 32px;
+          position: relative;
         }
 
-        .role-pill,
-        .mode-pill {
+        .segment-btn {
+          position: relative;
+          z-index: 2;
+          background: transparent;
           border: none;
-          cursor: pointer;
-          border-radius: 999px;
-          transition: all 0.2s ease;
+          color: rgba(255,255,255,0.5);
+          padding: 12px 24px;
           font-family: 'Syne', sans-serif;
           font-weight: 700;
-          background: transparent;
-          color: rgba(255,255,255,0.7);
+          font-size: 14px;
+          cursor: pointer;
+          border-radius: 99px;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .role-pill {
-          padding: 11px 16px;
+        .segment-btn.active {
+          color: #000;
+        }
+        
+        .segment-btn:not(.active):hover {
+          color: rgba(255,255,255,0.9);
         }
 
-        .role-pill.active {
+        .segment-bg {
+          position: absolute;
+          top: 6px; bottom: 6px;
           background: var(--accent);
-          color: #05050f;
-        }
-
-        .mode-pill {
-          padding: 11px 18px;
-          font-size: 13px;
-          letter-spacing: 0.05em;
-        }
-
-        .mode-pill.active {
-          background: rgba(255,255,255,0.95);
-          color: #05050f;
-        }
-
-        .role-pill:not(.active):hover,
-        .mode-pill:not(.active):hover,
-        .home-link:hover {
-          transform: translateY(-1px);
-          border-color: rgba(255,255,255,0.2);
-        }
-
-        .hero-card {
-          border-radius: 24px;
-          padding: 24px;
-          background: rgba(255,255,255,0.04);
-          border: 1px solid rgba(255,255,255,0.08);
-        }
-
-        .hero-card-row {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 14px;
-        }
-
-        .hero-metric {
-          padding: 16px;
-          border-radius: 18px;
-          background: rgba(255,255,255,0.03);
-          border: 1px solid rgba(255,255,255,0.06);
-        }
-
-        .hero-metric strong {
-          display: block;
-          font-family: 'Syne', sans-serif;
-          font-size: 20px;
-          margin-bottom: 4px;
-          color: var(--accent);
-        }
-
-        .hero-metric span {
-          color: rgba(255,255,255,0.62);
-          font-size: 13px;
-          line-height: 1.5;
+          border-radius: 99px;
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+          z-index: 1;
         }
 
         .form-panel {
-          padding: 30px;
-          position: relative;
-          overflow: hidden;
+          padding: 40px;
         }
 
         .form-header {
-          margin-bottom: 22px;
+          margin-bottom: 36px;
         }
 
-        .form-header h1 {
+        .form-header h2 {
           font-family: 'Bebas Neue', sans-serif;
-          font-size: clamp(40px, 5vw, 68px);
-          line-height: 0.95;
-          margin: 6px 0 8px;
-        }
-
-        .form-header p,
-        .auth-footer,
-        .status-text,
-        .field-hint {
-          color: rgba(255,255,255,0.64);
+          font-size: clamp(48px, 5vw, 64px);
+          line-height: 1;
+          margin: 0;
         }
 
         .auth-form {
           display: grid;
-          gap: 14px;
+          gap: 20px;
         }
 
         .input-grid {
           display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 14px;
+          grid-template-columns: 1fr;
+          gap: 20px;
+        }
+        @media(min-width: 480px) {
+          .input-grid.cols-2 { grid-template-columns: 1fr 1fr; }
         }
 
         .field {
-          display: grid;
-          gap: 8px;
+          position: relative;
         }
 
         .field label {
-          font-family: 'Syne', sans-serif;
+          display: block;
+          font-family: 'DM Sans', sans-serif;
           font-size: 12px;
+          font-weight: 700;
           text-transform: uppercase;
-          letter-spacing: 0.14em;
-          color: rgba(255,255,255,0.7);
+          letter-spacing: 0.12em;
+          color: rgba(255,255,255,0.5);
+          margin-bottom: 8px;
+          transition: color 0.3s;
         }
 
-        .field input,
-        .field select {
+        .field-input-wrap {
+          position: relative;
+          display: flex;
+          align-items: center;
+        }
+
+        .field-icon {
+          position: absolute;
+          left: 16px;
+          color: rgba(255,255,255,0.3);
+          transition: color 0.3s;
+          pointer-events: none;
+        }
+
+        .field-input {
           width: 100%;
-          border: 1px solid rgba(255,255,255,0.12);
+          background: rgba(0,0,0,0.2);
+          border: 1px solid rgba(255,255,255,0.08);
           border-radius: 16px;
-          background: rgba(255,255,255,0.04);
           color: #fff;
-          padding: 14px 16px;
+          padding: 16px 16px 16px 44px;
           font-family: 'DM Sans', sans-serif;
           font-size: 15px;
           outline: none;
+          transition: all 0.3s ease;
+        }
+        
+        select.field-input {
+          appearance: none;
         }
 
-        .field input:focus,
-        .field select:focus {
+        .field-input::placeholder {
+          color: rgba(255,255,255,0.2);
+        }
+
+        .field-input:focus {
+          background: rgba(0,0,0,0.4);
           border-color: var(--accent);
-          box-shadow: 0 0 0 4px rgba(255,255,255,0.03);
+          box-shadow: 0 0 0 3px rgba(255,255,255,0.03);
         }
 
-        .field option { color: #05050f; }
-
-        .field-hint {
-          font-size: 12px;
-          line-height: 1.4;
+        .field-input:focus + .field-icon,
+        .field-input:not(:placeholder-shown) + .field-icon {
+          color: var(--accent);
         }
 
-        .status-box { min-height: 22px; }
+        .field-input:focus ~ label {
+          color: var(--accent);
+        }
+
+        .status-box {
+          min-height: 24px;
+          margin-top: -4px;
+        }
 
         .status-text {
-          font-size: 14px;
-          line-height: 1.5;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 13px;
+          padding: 10px 14px;
+          border-radius: 10px;
+          display: inline-block;
+          width: 100%;
         }
 
-        .status-text.success { color: #98f5d3; }
-        .status-text.error { color: #ffb0a1; }
+        .status-text.success { background: rgba(0, 212, 170, 0.1); color: #00D4AA; border: 1px solid rgba(0,212,170,0.2); }
+        .status-text.error { background: rgba(255, 68, 68, 0.1); color: #ff6b6b; border: 1px solid rgba(255,68,68,0.2); }
 
         .submit-btn {
-          border: none;
-          border-radius: 18px;
-          padding: 15px 18px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          width: 100%;
+          padding: 18px;
           background: var(--accent);
           color: #05050f;
+          border: none;
+          border-radius: 16px;
           font-family: 'Syne', sans-serif;
           font-weight: 800;
-          font-size: 14px;
-          letter-spacing: 0.12em;
+          font-size: 15px;
+          letter-spacing: 0.1em;
           text-transform: uppercase;
           cursor: pointer;
-          transition: transform 0.2s ease, opacity 0.2s ease;
-          box-shadow: 0 18px 32px rgba(0,0,0,0.28);
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          box-shadow: 0 10px 20px rgba(0,0,0,0.2), inset 0 -2px 0 rgba(0,0,0,0.1);
+          margin-top: 10px;
         }
 
-        .submit-btn:hover { transform: translateY(-1px); }
-        .submit-btn:disabled { opacity: 0.75; cursor: progress; }
+        .submit-btn:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 15px 25px rgba(0,0,0,0.3), 0 0 20px var(--glow), inset 0 -2px 0 rgba(0,0,0,0.1);
+        }
+
+        .submit-btn:active:not(:disabled) {
+          transform: translateY(1px);
+        }
+
+        .submit-btn:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+          filter: grayscale(0.5);
+        }
+
+        .submit-btn svg {
+          transition: transform 0.3s;
+        }
+        .submit-btn:hover:not(:disabled) svg {
+          transform: translateX(4px);
+        }
 
         .auth-footer {
-          margin-top: 18px;
-          font-size: 14px;
-          line-height: 1.7;
+          margin-top: 24px;
           text-align: center;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 14px;
+          color: rgba(255,255,255,0.5);
         }
 
         .auth-footer button {
-          border: none;
           background: none;
-          color: #fff;
-          font: inherit;
-          padding: 0;
-          margin-left: 6px;
+          border: none;
+          color: var(--accent);
+          font-weight: 700;
+          margin-left: 8px;
           cursor: pointer;
+          font-family: inherit;
+          font-size: inherit;
+          transition: filter 0.3s;
+        }
+        .auth-footer button:hover {
+          filter: brightness(1.2);
           text-decoration: underline;
         }
 
-        @media (max-width: 960px) {
-          .auth-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .hero-panel {
-            min-height: auto;
-          }
+        @media (max-width: 900px) {
+          .auth-grid { grid-template-columns: 1fr; }
+          .hero-panel { min-height: auto; padding: 32px; }
+          .hero-title { font-size: 48px; }
         }
 
-        @media (max-width: 640px) {
-          .auth-shell { padding: 18px; }
-          .auth-topbar { flex-direction: column; align-items: flex-start; }
-          .form-panel,
-          .hero-panel { padding: 22px; border-radius: 24px; }
-          .input-grid,
-          .hero-card-row { grid-template-columns: 1fr; }
-          .role-strip,
-          .mode-strip { width: 100%; justify-content: space-between; }
-          .role-pill,
-          .mode-pill { flex: 1; text-align: center; }
+        @media (max-width: 500px) {
+          .auth-shell { padding: 20px; }
+          .form-panel { padding: 24px; }
+          .segment-btn { padding: 10px 16px; font-size: 13px; }
         }
       `}</style>
+      
+      <div className="bg-grid" />
 
-      <div className="auth-topbar">
+      <header className="auth-topbar">
         <div className="auth-brand">
           <strong>UBER</strong>
-          <span>Express login and signup for riders and drivers</span>
+          <span>Express Authenticaton</span>
         </div>
-        <button className="home-link" type="button" onClick={() => navigate('/')}>Back to home</button>
-      </div>
+        <button className="home-link" onClick={() => navigate('/')}>Back Home</button>
+      </header>
 
-      <div className="auth-grid">
-        <aside className="hero-panel">
-          <div>
-            <div className="auth-kicker">{theme.subtitle}</div>
-            <h2 className="hero-title">{theme.title}</h2>
-            <p className="hero-copy">{theme.copy}</p>
+      <main className="auth-grid">
+        {/* Left Hero Panel */}
+        <section className="hero-panel">
+          <div className="auth-kicker">{theme.subtitle}</div>
+          <h1 className="hero-title">{theme.title}</h1>
+          <p className="hero-copy">{theme.copy}</p>
 
-            <div className="role-strip" aria-label="Account type selector">
-              <button
-                type="button"
-                className={`role-pill${role === 'user' ? ' active' : ''}`}
-                onClick={() => setRole('user')}
-              >
-                User
-              </button>
-              <button
-                type="button"
-                className={`role-pill${role === 'captain' ? ' active' : ''}`}
-                onClick={() => setRole('captain')}
-              >
-                Rider / Driver
-              </button>
-            </div>
+          <div className="segmented-control" role="group" aria-label="Account Role">
+            <div className="segment-bg" style={{ 
+              left: role === 'user' ? '6px' : 'calc(50% + 3px)', 
+              width: 'calc(50% - 9px)' 
+            }} />
+            <button 
+              type="button" 
+              className={`segment-btn ${role === 'user' ? 'active' : ''}`}
+              style={{ width: '50%' }}
+              onClick={() => setRole('user')}
+            >
+              Passenger
+            </button>
+            <button 
+              type="button" 
+              className={`segment-btn ${role === 'captain' ? 'active' : ''}`}
+              style={{ width: '50%' }}
+              onClick={() => setRole('captain')}
+            >
+              Captain
+            </button>
           </div>
+        </section>
 
-          <div className="hero-card">
-            <div className="hero-card-row">
-              <div className="hero-metric">
-                <strong>JWT</strong>
-                <span>Returns a token and sets the cookie used by the Express auth middleware.</span>
-              </div>
-              <div className="hero-metric">
-                <strong>API</strong>
-                <span>Posts to /api/users and /api/captains with the right body shape.</span>
-              </div>
-            </div>
-          </div>
-        </aside>
-
+        {/* Right Form Panel */}
         <section className="form-panel">
-          <div className="form-header">
-            <div className="auth-kicker">{mode === 'login' ? 'Welcome back' : 'Create your account'}</div>
-            <h1>{mode === 'login' ? 'Sign in' : 'Sign up'}</h1>
-            <p className="hero-copy" style={{ marginBottom: 0 }}>
-              Use the same screen for both login and signup, then flip between user and driver auth flows.
-            </p>
-          </div>
-
-          <div className="mode-strip" aria-label="Login or signup selector">
-            <button
-              type="button"
-              className={`mode-pill${mode === 'login' ? ' active' : ''}`}
-              onClick={() => setMode('login')}
-            >
-              Login
-            </button>
-            <button
-              type="button"
-              className={`mode-pill${mode === 'signup' ? ' active' : ''}`}
-              onClick={() => setMode('signup')}
-            >
-              Sign up
-            </button>
-          </div>
+          <header className="form-header">
+            <div className="segmented-control" style={{ marginBottom: '24px', transform: 'scale(0.9)', transformOrigin: 'left center' }}>
+              <div className="segment-bg" style={{ 
+                left: mode === 'login' ? '6px' : 'calc(50% + 3px)', 
+                width: 'calc(50% - 9px)' 
+              }} />
+              <button 
+                type="button" 
+                className={`segment-btn ${mode === 'login' ? 'active' : ''}`}
+                style={{ width: '50%' }}
+                onClick={() => setMode('login')}
+              >
+                Sign In
+              </button>
+              <button 
+                type="button" 
+                className={`segment-btn ${mode === 'signup' ? 'active' : ''}`}
+                style={{ width: '50%' }}
+                onClick={() => setMode('signup')}
+              >
+                Register
+              </button>
+            </div>
+            <h2>{mode === 'login' ? 'Welcome Back' : 'Get Started'}</h2>
+          </header>
 
           <form className="auth-form" onSubmit={handleSubmit}>
             {mode === 'signup' && (
               <div className="field">
-                <label htmlFor="name">Name</label>
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  value={form.name}
-                  onChange={handleChange}
-                  placeholder={role === 'user' ? 'John Doe' : 'Atlas Driver'}
-                  required
-                />
+                <label htmlFor="name">Full Name</label>
+                <div className="field-input-wrap">
+                  <input
+                    id="name"
+                    name="name"
+                    type="text"
+                    className="field-input"
+                    value={form.name}
+                    onChange={handleChange}
+                    placeholder={role === 'user' ? 'e.g. John Doe' : 'e.g. Alex Driver'}
+                    required
+                  />
+                  <div className="field-icon"><IconUser /></div>
+                </div>
               </div>
             )}
 
-            <div className="input-grid">
-              <div className="field">
-                <label htmlFor="email">Email</label>
+            <div className="field">
+              <label htmlFor="email">Email Address</label>
+              <div className="field-input-wrap">
                 <input
                   id="email"
                   name="email"
                   type="email"
+                  className="field-input"
                   value={form.email}
                   onChange={handleChange}
-                  placeholder="you@example.com"
+                  placeholder="name@example.com"
                   required
                 />
+                <div className="field-icon"><IconMail /></div>
               </div>
-              <div className="field">
-                <label htmlFor="password">Password</label>
+            </div>
+
+            <div className="field">
+              <label htmlFor="password">Password</label>
+              <div className="field-input-wrap">
                 <input
                   id="password"
                   name="password"
                   type="password"
+                  className="field-input"
                   value={form.password}
                   onChange={handleChange}
-                  placeholder="••••••••"
+                  placeholder="Required 6+ characters"
                   minLength="6"
                   required
                 />
+                <div className="field-icon"><IconLock /></div>
               </div>
             </div>
 
             {mode === 'signup' && role === 'user' && (
               <div className="field">
-                <label htmlFor="role">Account role</label>
-                <select id="role" name="role" value={form.role} onChange={handleChange}>
-                  <option value="rider">Rider</option>
-                  <option value="driver">Driver</option>
-                </select>
-                <div className="field-hint">The backend accepts only rider or driver for user registration.</div>
+                <label htmlFor="role">Account Role</label>
+                <div className="field-input-wrap">
+                  <select id="role" name="role" className="field-input" value={form.role} onChange={handleChange}>
+                    <option value="rider">Rider</option>
+                    <option value="driver">Driver</option>
+                  </select>
+                  <div className="field-icon"><IconUsers /></div>
+                </div>
               </div>
             )}
 
             {mode === 'signup' && role === 'captain' && (
-              <div className="input-grid">
+              <div className="input-grid cols-2">
                 <div className="field">
-                  <label htmlFor="vehicleType">Vehicle type</label>
-                  <select id="vehicleType" name="vehicleType" value={form.vehicleType} onChange={handleChange}>
-                    <option value="car">Car</option>
-                    <option value="motorcycle">Motorcycle</option>
-                    <option value="bicycle">Bicycle</option>
-                  </select>
+                  <label htmlFor="vehicleType">Vehicle</label>
+                  <div className="field-input-wrap">
+                    <select id="vehicleType" name="vehicleType" className="field-input" value={form.vehicleType} onChange={handleChange}>
+                      <option value="car">Car</option>
+                      <option value="motorcycle">Motorcycle</option>
+                      <option value="bicycle">Bicycle</option>
+                    </select>
+                    <div className="field-icon"><IconCar /></div>
+                  </div>
                 </div>
                 <div className="field">
                   <label htmlFor="capacity">Capacity</label>
-                  <input
-                    id="capacity"
-                    name="capacity"
-                    type="number"
-                    min="1"
-                    value={form.capacity}
-                    onChange={handleChange}
-                    placeholder="4"
-                    required
-                  />
+                  <div className="field-input-wrap">
+                    <input
+                      id="capacity"
+                      name="capacity"
+                      type="number"
+                      min="1"
+                      className="field-input"
+                      value={form.capacity}
+                      onChange={handleChange}
+                      placeholder="e.g. 4"
+                      required
+                    />
+                    <div className="field-icon"><IconUsers /></div>
+                  </div>
                 </div>
               </div>
             )}
 
             <div className="status-box">
-              {status.message ? <div className={`status-text ${status.type}`}>{status.message}</div> : null}
+              {status.message && (
+                <div className={`status-text ${status.type}`}>{status.message}</div>
+              )}
             </div>
 
             <button className="submit-btn" type="submit" disabled={loading}>
-              {loading ? 'Please wait...' : mode === 'login' ? 'Sign in' : 'Create account'}
+              {loading ? 'Processing...' : mode === 'login' ? 'Continue' : 'Create Account'}
+              {!loading && <IconArrowRight />}
             </button>
           </form>
 
-          <div className="auth-footer">
-            {mode === 'login' ? 'Need an account?' : 'Already have an account?'}
+          <footer className="auth-footer">
+            {mode === 'login' ? "Don't have an account?" : "Already have an account?"}
             <button type="button" onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}>
-              {mode === 'login' ? 'Switch to signup' : 'Switch to login'}
+              {mode === 'login' ? 'Sign up' : 'Log in'}
             </button>
-          </div>
+          </footer>
         </section>
-      </div>
+      </main>
     </div>
   );
 }

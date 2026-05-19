@@ -26,6 +26,8 @@ const initialForm = { name: '', email: '', password: '', vehicleType: 'car', cap
 const IconUser    = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
 const IconMail    = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>;
 const IconLock    = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>;
+const IconEye     = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>;
+const IconEyeOff  = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><line x1="2" y1="2" x2="22" y2="22"/></svg>;
 const IconCar     = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 17H3v-4l2-5h14l2 5v4h-2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>;
 const IconUsers   = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
 const IconArrow   = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>;
@@ -38,6 +40,7 @@ export default function AuthPage({ defaultRole = 'user', defaultMode = 'login' }
   const [status, setStatus]       = useState({ type: '', message: '' });
   const [mounted, setMounted]     = useState(false);
   const [headlineIdx, setHeadlineIdx] = useState(0);
+  const [showPassword, setShowPassword] = useState(false);
 
   const theme = ROLE_THEMES[role];
 
@@ -374,13 +377,25 @@ export default function AuthPage({ defaultRole = 'user', defaultMode = 'login' }
       transition: color 0.28s;
       display: flex; align-items: center;
     }
+    .ap-password-toggle {
+      position: absolute; right: 14px;
+      color: rgba(255,255,255,0.3);
+      background: none; border: none;
+      cursor: pointer;
+      display: flex; align-items: center;
+      transition: color 0.28s;
+      outline: none;
+    }
+    .ap-password-toggle:hover {
+      color: #fff;
+    }
     .ap-input {
       width: 100%;
       background: rgba(0,0,0,0.3);
       border: 1px solid rgba(255,255,255,0.08);
       border-radius: 12px;
       color: #fff;
-      padding: 12px 14px 12px 40px;
+      padding: 12px 40px 12px 40px;
       font-family: 'DM Sans', sans-serif;
       font-size: 14px;
       outline: none;
@@ -642,12 +657,20 @@ export default function AuthPage({ defaultRole = 'user', defaultMode = 'login' }
                 <div className="ap-input-wrap">
                   <div className="ap-input-icon"><IconLock /></div>
                   <input
-                    name="password" type="password" className="ap-input"
+                    name="password" type={showPassword ? "text" : "password"} className="ap-input"
                     placeholder="Min. 6 characters"
                     value={form.password} onChange={handleChange} minLength="6" required
                     onFocus={e => { e.target.style.borderColor = theme.accent; e.target.style.boxShadow = `0 0 0 3px rgba(${theme.accentRgb},0.14)`; }}
                     onBlur={e => { e.target.style.borderColor = ''; e.target.style.boxShadow = ''; }}
                   />
+                  <button 
+                    type="button" 
+                    className="ap-password-toggle"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <IconEyeOff /> : <IconEye />}
+                  </button>
                 </div>
               </div>
 

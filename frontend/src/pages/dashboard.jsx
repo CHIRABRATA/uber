@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const RIDE_OPTIONS = [
   {
@@ -116,6 +117,7 @@ export default function Dashboard() {
   const [destFocus, setDestFocus]     = useState(false);
   const [userProfile, setUserProfile] = useState(null);
   const destRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Fetch user profile from DB
@@ -156,6 +158,25 @@ export default function Dashboard() {
   const handleSearch = e => {
     e.preventDefault();
     if (pickup && destination) setSheet('rides');
+  };
+
+  const handleLogout = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      await fetch('/api/users/logout', {
+        method: 'POST',
+        headers,
+        credentials: 'include'
+      });
+      // Clear token and explicitly navigate back to root or login
+      localStorage.removeItem('token');
+      navigate('/login');
+    } catch (err) {
+      console.error('Logout failed:', err);
+    }
   };
 
   const ride = RIDE_OPTIONS.find(r => r.id === selectedRide);
@@ -862,7 +883,7 @@ export default function Dashboard() {
                 </button>
               ))}
             </div>
-            <button className="db-menu-signout">
+            <button className="db-menu-signout" onClick={handleLogout}>
               <span>🚪</span> Sign Out
             </button>
           </div>

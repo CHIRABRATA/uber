@@ -114,7 +114,32 @@ export default function Dashboard() {
   const [time, setTime]               = useState(new Date());
   const [pickupFocus, setPickupFocus] = useState(false);
   const [destFocus, setDestFocus]     = useState(false);
+  const [userProfile, setUserProfile] = useState(null);
   const destRef = useRef(null);
+
+  useEffect(() => {
+    // Fetch user profile from DB
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const res = await fetch('/api/users/profile', {
+          method: 'GET',
+          headers,
+          credentials: 'include' // Important for httpOnly cookies if used instead of localStorage
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setUserProfile(data.user);
+        }
+      } catch (err) {
+        console.error('Failed to fetch user profile:', err);
+      }
+    };
+    fetchProfile();
+  }, []);
 
   useEffect(() => {
     const iv = setInterval(() => setTime(new Date()), 60000);
@@ -816,10 +841,10 @@ export default function Dashboard() {
           <div className="db-menu-panel">
             <div className="db-menu-logo">UB<span>E</span>R</div>
             <div className="db-menu-user">
-              <div className="db-menu-avatar">R</div>
+              <div className="db-menu-avatar">{userProfile?.name?.charAt(0).toUpperCase() || 'U'}</div>
               <div>
-                <div className="db-menu-uname">Rahul Sharma</div>
-                <div className="db-menu-email">rahul@example.com</div>
+                <div className="db-menu-uname">{userProfile?.name || 'Loading...'}</div>
+                <div className="db-menu-email">{userProfile?.email || '...'}</div>
               </div>
             </div>
             <div className="db-menu-links">

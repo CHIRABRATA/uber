@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const ROLE_THEMES = {
   user: {
@@ -41,6 +42,7 @@ export default function AuthPage({ defaultRole = 'user', defaultMode = 'login' }
   const [mounted, setMounted]     = useState(false);
   const [headlineIdx, setHeadlineIdx] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
+  const navigate                  = useNavigate();
 
   const theme = ROLE_THEMES[role];
 
@@ -72,7 +74,12 @@ export default function AuthPage({ defaultRole = 'user', defaultMode = 'login' }
       try { data = JSON.parse(raw); } catch {}
       if (!res.ok) throw new Error(data?.errors?.[0]?.msg || data?.message || raw || `Error ${res.status}`);
       setStatus({ type: 'success', message: data?.message || (mode === 'signup' ? 'Account created!' : 'Logged in!') });
-      if (mode === 'signup') setMode('login');
+      if (mode === 'signup') {
+        setMode('login');
+      } else {
+        // Redirect to dashboard upon successful login
+        navigate('/dashboard');
+      }
     } catch (err) {
       setStatus({ type: 'error', message: err.message || 'Something went wrong' });
     } finally {

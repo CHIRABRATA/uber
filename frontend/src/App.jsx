@@ -5,6 +5,7 @@ import UserLogin from './pages/Userlogin';
 import UserSignup from './pages/Usersignup';
 import CaptainLogin from './pages/Captainlogin';
 import CaptainSignup from './pages/Captainsignup';
+import Dashboard from './pages/dashboard';
 
 const App = () => {
   return (
@@ -15,6 +16,7 @@ const App = () => {
       <Route path="/signup" element={<UserSignup />} />
       <Route path="/captain/login" element={<CaptainLogin />} />
       <Route path="/captain/signup" element={<CaptainSignup />} />
+      <Route path="/dashboard" element={<Dashboard />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

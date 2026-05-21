@@ -1,14 +1,77 @@
-import react from 'react';
-import { useEffect } from 'react';
-
+import React, { useState } from 'react';
 
 const Dashboard = () => {
-    return (
-        <div className='dashboard'>
-           <img className='dashboard-image' src='data:image/png;base64,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' alt='dashboard' />
-    <div className='h screen w-screen'>
-        <img classname ='h-screen w-screen' src='https://in.pinterest.com/pin/12244230231269222/' alt='dashboard' />
-    </div>
+    const [pickup, setPickup] = useState('');
+    const [destination, setDestination] = useState('');
 
+    const handleSearch = (e) => {
+        e.preventDefault();
+        console.log('Searching rides for:', pickup, 'to', destination);
+    };
+
+    return (
+        <div className="h-screen w-screen relative overflow-hidden bg-gray-100">
+            {/* Map Placeholder Image */}
+            <div className="absolute inset-0">
+                {/* Temporary placeholder map. You can integrate Google Maps or Mapbox later */}
+                <img 
+                    className="h-full w-full object-cover opacity-80" 
+                    src="https://simonpan.com/wp-content/themes/sp_portfolio/assets/uber-rider-app-map.jpg" 
+                    alt="Map view" 
+                />
+            </div>
+
+            {/* Top Menu Icon */}
+            <div className="absolute top-0 left-0 p-5 flex justify-between w-full z-10">
+                <button className="bg-white rounded-full p-2 shadow-md hover:bg-gray-50 transition">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+            </div>
+
+            {/* Bottom Sheet - Find a trip */}
+            <div className="absolute bottom-0 left-0 w-full bg-white rounded-t-3xl pt-6 pb-8 px-6 shadow-2xl">
+                <h2 className="text-2xl font-bold mb-6">Find a trip</h2>
+                
+                <form onSubmit={handleSearch} className="flex flex-col gap-4 relative">
+                    {/* Connecting line between inputs */}
+                    <div className="absolute left-[18px] top-[28px] bottom-[32px] w-[2px] bg-gray-300 z-0 hidden md:block"></div>
+                    <div className="absolute left-[18px] top-[30px] bottom-[108px] w-[2px] bg-[#000000] z-0"></div>
+
+                    {/* Pickup Input */}
+                    <div className="relative z-10 flex items-center bg-[#eee] rounded-lg p-3">
+                        <div className="w-2 h-2 rounded-full bg-black mr-4 ml-1"></div>
+                        <input 
+                            type="text" 
+                            value={pickup}
+                            onChange={(e) => setPickup(e.target.value)}
+                            placeholder="Add a pick-up location" 
+                            className="bg-transparent w-full outline-none text-base"
+                            required
+                        />
+                    </div>
+                    
+                    {/* Destination Input */}
+                    <div className="relative z-10 flex items-center bg-[#eee] rounded-lg p-3 mt-1">
+                        <div className="w-2 h-2 bg-black mr-4 ml-1 rounded-sm"></div>
+                        <input 
+                            type="text" 
+                            value={destination}
+                            onChange={(e) => setDestination(e.target.value)}
+                            placeholder="Enter your destination" 
+                            className="bg-transparent w-full outline-none text-base"
+                            required
+                        />
+                    </div>
+
+                    <button type="submit" className="w-full bg-black text-white py-3 mt-4 rounded-lg text-lg font-semibold hover:bg-gray-800 transition">
+                        Search rides
+                    </button>
+                </form>
+            </div>
+        </div>
     );
-}
+};
+
+export default Dashboard;

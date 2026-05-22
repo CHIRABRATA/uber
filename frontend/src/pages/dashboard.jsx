@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import UberMap from '../components/UberMap';
 
 const RIDE_OPTIONS = [
   {
@@ -670,32 +671,11 @@ export default function Dashboard() {
 
       {/* MAP */}
       <div className="db-map">
-        <img
-          className="db-map-img"
-          src="https://simonpan.com/wp-content/themes/sp_portfolio/assets/uber-rider-app-map.jpg"
-          alt="Map"
-        />
-        <div className="db-map-grid" />
-        <div className="db-map-overlay" />
-
-        {/* Decorative road lines */}
-        {[
-          {top:'20%',left:'10%',w:'60%',h:'2px',rot:'-8deg'},
-          {top:'55%',left:'0%',w:'45%',h:'2px',rot:'12deg'},
-          {top:'30%',left:'55%',w:'50%',h:'2px',rot:'-3deg'},
-          {top:'10%',left:'30%',w:'2px',h:'35%',rot:'0deg'},
-          {top:'15%',left:'70%',w:'2px',h:'40%',rot:'5deg'},
-        ].map((r,i) => (
-          <div key={i} className="db-road" style={{
-            top:r.top, left:r.left,
-            width:r.w, height:r.h,
-            transform:`rotate(${r.rot})`,
-          }} />
-        ))}
+        <UberMap />
       </div>
 
-      {/* LOCATION PIN */}
-      <div className="db-pin">
+      {/* LOCATION PIN (hidden since UberMap shows MarkerF) */}
+      <div className="db-pin" style={{ display: 'none' }}>
         <div className="db-pin-pulse" />
         <div className="db-pin-pulse db-pin-pulse2" />
         <div className="db-pin-dot">

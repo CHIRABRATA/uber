@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@react-google-maps/api": "^2.20.8",
     "mongoose": "^9.6.2"
   }
 }

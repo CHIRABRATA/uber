@@ -1,120 +1,74 @@
-import React, { useState, useEffect, useCallback, memo } from 'react';
-import { GoogleMap, useJsApiLoader, MarkerF } from '@react-google-maps/api';
+import React, { useState, useEffect, memo } from 'react';
+import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
-// Map container sizing to fill the parent entirely
-const containerStyle = {
-  width: '100%',
-  height: '100%',
-};
+// Fallback coordinates: Central Kolkata/Salt Lake area in Array format [lat, lng]
+const fallbackCenter = [22.5726, 88.3639];
 
-// Fallback coordinates: Central Kolkata/Salt Lake area
-const fallbackCenter = {
-  lat: 22.5726,
-  lng: 88.3639,
-};
+// Create a custom blue pulsing marker icon mimicking Uber's style
+const userIcon = L.divIcon({
+  className: 'custom-user-marker',
+  html: `
+    <div style="
+      width: 16px; height: 16px; 
+      background: #4A90E2; 
+      border: 2px solid white; 
+      border-radius: 50%;
+      box-shadow: 0 0 10px rgba(74, 144, 226, 0.8);
+    ">
+    </div>
+  `,
+  iconSize: [20, 20],
+  iconAnchor: [10, 10], // Centered
+});
 
-// Premium dark mode map styles emphasizing road networks minimally
-const darkMapStyles = [
-  { elementType: 'geometry', stylers: [{ color: '#121212' }] },
-  { elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
-  { elementType: 'labels.text.fill', stylers: [{ color: '#757575' }] },
-  { elementType: 'labels.text.stroke', stylers: [{ color: '#212121' }] },
-  { featureType: 'administrative', elementType: 'geometry', stylers: [{ color: '#757575' }] },
-  { featureType: 'administrative.country', elementType: 'labels.text.fill', stylers: [{ color: '#9e9e9e' }] },
-  { featureType: 'administrative.locality', elementType: 'labels.text.fill', stylers: [{ color: '#bdbdbd' }] },
-  { featureType: 'poi', elementType: 'labels.text.fill', stylers: [{ color: '#757575' }] },
-  { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#181818' }] },
-  { featureType: 'poi.park', elementType: 'labels.text.fill', stylers: [{ color: '#616161' }] },
-  { featureType: 'poi.park', elementType: 'labels.text.stroke', stylers: [{ color: '#1b1b1b' }] },
-  { featureType: 'road', elementType: 'geometry.fill', stylers: [{ color: '#2c2c2c' }] },
-  { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#8a8a8a' }] },
-  { featureType: 'road.arterial', elementType: 'geometry', stylers: [{ color: '#373737' }] },
-  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#3c3c3c' }] },
-  { featureType: 'road.highway.controlled_access', elementType: 'geometry', stylers: [{ color: '#4e4e4e' }] },
-  { featureType: 'road.local', elementType: 'labels.text.fill', stylers: [{ color: '#616161' }] },
-  { featureType: 'transit', elementType: 'labels.text.fill', stylers: [{ color: '#757575' }] },
-  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#000000' }] },
-  { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#3d3d3d' }] },
-];
+// Helper component to actively shift the map when geolocation completes
+function RecenterMap({ position }) {
+  const map = useMap();
+  useEffect(() => {
+    if (position) {
+      map.setView(position, map.getZoom());
+    }
+  }, [position, map]);
+  return null;
+}
 
-const UberMap = () => {
-  // Load the Google Maps API script efficiently
-  const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: 'YOUR_GOOGLE_MAPS_API_KEY_HERE', 
-  });
-
-  // State to track user location, defaulting to fallback
+const UberMap = ({ pickupLocation, destinationLocation, currentSheetState }) => {
   const [currentLocation, setCurrentLocation] = useState(fallbackCenter);
-  const [map, setMap] = useState(null);
 
-  // Fetch the user's real-time position upon mount
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          // Update state with actual user coordinates
-          setCurrentLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          });
+          setCurrentLocation([position.coords.latitude, position.coords.longitude]);
         },
         (error) => {
           console.warn('Geolocation blocked or failed. Using fallback coordinates.', error);
-          // State remains on fallbackCenter securely avoiding app crash
         },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
     }
   }, []);
 
-  // Memoized callback to store map instance when fully loaded
-  const onLoad = useCallback((mapInstance) => {
-    setMap(mapInstance);
-  }, []);
-
-  // Memoized callback to cleanup map resources
-  const onUnmount = useCallback(() => {
-    setMap(null);
-  }, []);
-
-  // Render a sleek dark skeleton loader until the script is fully injected
-  if (!isLoaded) {
-    return (
-      <div className="w-full h-full bg-[#121212] flex items-center justify-center">
-        <span className="text-gray-400 text-sm animate-pulse">Loading Map...</span>
-      </div>
-    );
-  }
-
   return (
-    <GoogleMap
-      mapContainerStyle={containerStyle}
-      center={currentLocation}
-      zoom={15}
-      onLoad={onLoad}
-      onUnmount={onUnmount}
-      options={{
-        styles: darkMapStyles,
-        disableDefaultUI: true, // Hides satellite toggles, zoom buttons, and pegman
-        gestureHandling: 'greedy', // Ensures touch events always pan the map rather than scrolling the page
-      }}
-    >
-      {/* Rider's current location blue dot marker */}
-      <MarkerF
-        position={currentLocation}
-        icon={{
-          path: window.google.maps.SymbolPath.CIRCLE,
-          scale: 8,
-          fillColor: '#4A90E2', // Uber/Premium blue tint
-          fillOpacity: 1,
-          strokeColor: '#FFFFFF',
-          strokeWeight: 2,
-        }}
-      />
-    </GoogleMap>
+    <div style={{ height: '100%', width: '100%', position: 'relative' }}>
+      <MapContainer 
+        center={currentLocation} 
+        zoom={15} 
+        zoomControl={false} 
+        style={{ height: '100%', width: '100%', background: '#121212' }} 
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        />
+        
+        <Marker position={currentLocation} icon={userIcon} />
+        <RecenterMap position={currentLocation} />
+      </MapContainer>
+    </div>
   );
 };
 
-// Wrapping in React.memo to prevent unnecessary re-renders of the heavy map component
 export default memo(UberMap);

@@ -54,18 +54,21 @@ const UberMap = ({ pickupCoords, destCoords }) => {
     }
   }, [pickupCoords]);
 
-  // 2. Fetch the driving route from OSRM when both coords exist
+  // 2. Fetch the driving route from OSRM when destination exists
   useEffect(() => {
     const fetchRoute = async () => {
-      if (!pickupCoords || !destCoords) {
+      // Use selected pickup, or fallback to current location if they didn't type a pickup
+      const startLocation = pickupCoords || currentLocation;
+
+      if (!startLocation || !destCoords) {
         setRoutePath([]);
         return;
       }
       
       try {
         // OSRM requires coordinates in [Longitude, Latitude] format for the URL!
-        const startLng = pickupCoords[1];
-        const startLat = pickupCoords[0];
+        const startLng = startLocation[1];
+        const startLat = startLocation[0];
         const endLng = destCoords[1];
         const endLat = destCoords[0];
 
@@ -83,7 +86,7 @@ const UberMap = ({ pickupCoords, destCoords }) => {
     };
 
     fetchRoute();
-  }, [pickupCoords, destCoords]);
+  }, [pickupCoords, destCoords, currentLocation]);
 
   // Determine what to show as the starting point
   const startMarker = pickupCoords || currentLocation;

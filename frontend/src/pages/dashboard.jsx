@@ -90,6 +90,7 @@ const RECENT = [
 ];
 
 export default function Dashboard() {
+  // --- STATE DECLARATIONS ---
   const [pickup, setPickup]           = useState('');
   const [destination, setDestination] = useState('');
   const [sheet, setSheet]             = useState('home');
@@ -100,9 +101,18 @@ export default function Dashboard() {
   const [destFocus, setDestFocus]     = useState(false);
   const [userProfile, setUserProfile] = useState(null);
   
+  // New States for Autocomplete and Map Coordinates
+  const [pickupSuggestions, setPickupSuggestions] = useState([]);
+  const [destSuggestions, setDestSuggestions] = useState([]);
+  const [pickupCoords, setPickupCoords] = useState(null); 
+  const [destCoords, setDestCoords] = useState(null);
+
   const destRef = useRef(null);
   const navigate = useNavigate();
 
+  // --- USE EFFECTS ---
+
+  // 1. Fetch User Profile
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -126,11 +136,52 @@ export default function Dashboard() {
     fetchProfile();
   }, []);
 
+  // 2. Clock Timer
   useEffect(() => {
     const iv = setInterval(() => setTime(new Date()), 60000);
     return () => clearInterval(iv);
   }, []);
 
+  // 3. Autocomplete Fetch Function
+  const fetchAddressSuggestions = async (query) => {
+    if (!query || query.length < 3) return [];
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=in&limit=4`);
+      return await res.json();
+    } catch (err) {
+      console.error("Nominatim API error:", err);
+      return [];
+    }
+  };
+
+  // 4. Debounced Watcher for Pickup Input
+  useEffect(() => {
+    const delay = setTimeout(async () => {
+      if (pickupFocus && pickup.length > 2) {
+        const results = await fetchAddressSuggestions(pickup);
+        setPickupSuggestions(results);
+      } else {
+        setPickupSuggestions([]);
+      }
+    }, 500); 
+    return () => clearTimeout(delay);
+  }, [pickup, pickupFocus]);
+
+  // 5. Debounced Watcher for Destination Input
+  useEffect(() => {
+    const delay = setTimeout(async () => {
+      if (destFocus && destination.length > 2) {
+        const results = await fetchAddressSuggestions(destination);
+        setDestSuggestions(results);
+      } else {
+        setDestSuggestions([]);
+      }
+    }, 500);
+    return () => clearTimeout(delay);
+  }, [destination, destFocus]);
+
+
+  // --- HANDLERS ---
   const greeting = () => {
     const h = time.getHours();
     if (h < 12) return 'Good morning';
@@ -158,6 +209,7 @@ export default function Dashboard() {
 
   const ride = RIDE_OPTIONS.find(r => r.id === selectedRide);
 
+  // --- RENDER ---
   return (
     <div style={{
       height: '100dvh', width: '100vw',
@@ -240,6 +292,23 @@ export default function Dashboard() {
           border-radius: 2px;
           margin: 14px auto 0;
         }
+          /* Auto-complete Dropdowns */
+        .db-suggestions {
+          position: absolute; top: 100%; left: 0; right: 0;
+          background: rgba(15,15,25,0.95); border: 1px solid rgba(255,255,255,0.1);
+          backdrop-filter: blur(16px);
+          border-radius: 12px; margin-top: 4px; z-index: 50;
+          overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .db-sugg-item {
+          padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05);
+          cursor: pointer; display: flex; align-items: center; gap: 12px;
+          transition: background 0.2s;
+        }
+        .db-sugg-item:hover { background: rgba(0,212,170,0.1); }
+        .db-sugg-icon { font-size: 14px; opacity: 0.6; }
+        .db-sugg-title { font-size: 13px; color: #fff; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .db-sugg-sub { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         /* Greeting */
         .db-greeting { padding: 20px 0 6px; }
@@ -340,6 +409,8 @@ export default function Dashboard() {
         <UberMap 
           pickupLocation={pickup} 
           destinationLocation={destination} 
+          pickupCoords={pickupCoords} 
+          destCoords={destCoords} 
           currentSheetState={sheet} 
         />
       </div>
@@ -373,10 +444,12 @@ export default function Dashboard() {
             <div className="db-greeting-name">Ready to <span>ride?</span></div>
           </div>
 
-          {/* Search inputs */}
+          {/* Search inputs WITH AUTOCOMPLETE UI */}
           <div className="db-search-wrap">
             <div className="db-route-line" />
-            <div className={`db-input-row${pickupFocus ? ' focused' : ''}`}>
+            
+            {/* PICKUP INPUT */}
+            <div className={`db-input-row${pickupFocus ? ' focused' : ''}`} style={{ position: 'relative' }}>
               <div className="db-input-dot" />
               <input
                 className="db-input"
@@ -384,11 +457,31 @@ export default function Dashboard() {
                 value={pickup}
                 onChange={e => setPickup(e.target.value)}
                 onFocus={() => setPickupFocus(true)}
-                onBlur={() => setPickupFocus(false)}
+                onBlur={() => setTimeout(() => setPickupFocus(false), 200)} 
                 onKeyDown={e => e.key === 'Enter' && destRef.current?.focus()}
               />
+              {/* Pickup Suggestions Dropdown */}
+              {pickupFocus && pickupSuggestions.length > 0 && (
+                <div className="db-suggestions">
+                  {pickupSuggestions.map((place, i) => (
+                    <div key={i} className="db-sugg-item" onClick={() => {
+                      setPickup(place.display_name.split(',')[0]); 
+                      setPickupCoords([parseFloat(place.lat), parseFloat(place.lon)]);
+                      setPickupSuggestions([]);
+                    }}>
+                      <div className="db-sugg-icon">📍</div>
+                      <div style={{ overflow: 'hidden' }}>
+                        <div className="db-sugg-title">{place.display_name.split(',')[0]}</div>
+                        <div className="db-sugg-sub">{place.display_name}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-            <div className={`db-input-row${destFocus ? ' focused' : ''}`} style={{marginBottom:0}}>
+
+            {/* DESTINATION INPUT */}
+            <div className={`db-input-row${destFocus ? ' focused' : ''}`} style={{ marginBottom: 0, position: 'relative' }}>
               <div className="db-input-sq" />
               <input
                 ref={destRef}
@@ -397,8 +490,26 @@ export default function Dashboard() {
                 value={destination}
                 onChange={e => setDestination(e.target.value)}
                 onFocus={() => setDestFocus(true)}
-                onBlur={() => setDestFocus(false)}
+                onBlur={() => setTimeout(() => setDestFocus(false), 200)}
               />
+              {/* Destination Suggestions Dropdown */}
+              {destFocus && destSuggestions.length > 0 && (
+                <div className="db-suggestions">
+                  {destSuggestions.map((place, i) => (
+                    <div key={i} className="db-sugg-item" onClick={() => {
+                      setDestination(place.display_name.split(',')[0]);
+                      setDestCoords([parseFloat(place.lat), parseFloat(place.lon)]);
+                      setDestSuggestions([]);
+                    }}>
+                      <div className="db-sugg-icon">🏁</div>
+                      <div style={{ overflow: 'hidden' }}>
+                        <div className="db-sugg-title">{place.display_name.split(',')[0]}</div>
+                        <div className="db-sugg-sub">{place.display_name}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 

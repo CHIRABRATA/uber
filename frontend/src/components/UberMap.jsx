@@ -39,7 +39,7 @@ function MapController({ pickupCoords, destCoords, routePath }) {
   return null;
 }
 
-const UberMap = ({ pickupCoords, destCoords }) => {
+const UberMap = ({ pickupCoords, destCoords, setTripDetails }) => {
   const [currentLocation, setCurrentLocation] = useState(fallbackCenter);
   const [routePath, setRoutePath] = useState([]); // Stores the line coordinates
 
@@ -62,6 +62,7 @@ const UberMap = ({ pickupCoords, destCoords }) => {
 
       if (!startLocation || !destCoords) {
         setRoutePath([]);
+        if (setTripDetails) setTripDetails({ distance: 0, duration: 0 });
         return;
       }
       
@@ -79,6 +80,13 @@ const UberMap = ({ pickupCoords, destCoords }) => {
           // GeoJSON returns [lng, lat]. Leaflet needs [lat, lng], so we flip them.
           const formattedCoords = data.routes[0].geometry.coordinates.map(coord => [coord[1], coord[0]]);
           setRoutePath(formattedCoords);
+
+          // Extract and convert OSRM distance/duration data
+          if (setTripDetails) {
+            const distanceInKm = (data.routes[0].distance / 1000).toFixed(1);
+            const durationInMin = Math.round(data.routes[0].duration / 60);
+            setTripDetails({ distance: distanceInKm, duration: durationInMin });
+          }
         }
       } catch (error) {
         console.error("Failed to fetch route:", error);

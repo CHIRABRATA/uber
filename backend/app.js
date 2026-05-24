@@ -16,6 +16,10 @@ app.use('/api/users', userRoutes);
 //add the captain route here
 app.use('/api/captains', require('./routes/captain.route'));
 
+//add the ride route here
+
+app.use('/api/rides', require('./routes/ride.route'));
+
 
 app.get('/', (req, res) => {
     res.send('Hello World!');

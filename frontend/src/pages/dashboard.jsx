@@ -10,7 +10,8 @@ const hexToRgb = (hex) => {
 
 const RIDE_OPTIONS = [
   {
-    id: 'uberx', name: 'UberX', tag: 'Everyday', eta: '3 min', price: '₹89', seats: 4, color: '#00D4AA',
+    id: 'uberx', name: 'UberX', tag: 'Everyday', seats: 4, color: '#00D4AA',
+    baseRate: 40, perKm: 12, perMin: 1.5,
     icon: (
       <svg viewBox="0 0 64 28" fill="none" style={{width:'100%',height:'100%'}}>
         <ellipse cx="32" cy="25" rx="28" ry="3" fill="rgba(0,212,170,0.15)"/>
@@ -26,7 +27,8 @@ const RIDE_OPTIONS = [
     ),
   },
   {
-    id: 'premier', name: 'Premier', tag: 'Luxury', eta: '6 min', price: '₹189', seats: 4, color: '#FFD700',
+    id: 'premier', name: 'Premier', tag: 'Luxury', seats: 4, color: '#FFD700',
+    baseRate: 60, perKm: 18, perMin: 2.5,
     icon: (
       <svg viewBox="0 0 64 28" fill="none" style={{width:'100%',height:'100%'}}>
         <ellipse cx="32" cy="25" rx="28" ry="3" fill="rgba(255,215,0,0.15)"/>
@@ -42,7 +44,8 @@ const RIDE_OPTIONS = [
     ),
   },
   {
-    id: 'suv', name: 'UberSUV', tag: 'Spacious', eta: '9 min', price: '₹299', seats: 6, color: '#FF6B35',
+    id: 'suv', name: 'UberSUV', tag: 'Spacious', seats: 6, color: '#FF6B35',
+    baseRate: 80, perKm: 25, perMin: 3,
     icon: (
       <svg viewBox="0 0 64 28" fill="none" style={{width:'100%',height:'100%'}}>
         <ellipse cx="32" cy="25" rx="29" ry="3" fill="rgba(255,107,53,0.15)"/>
@@ -58,7 +61,8 @@ const RIDE_OPTIONS = [
     ),
   },
   {
-    id: 'auto', name: 'Auto', tag: 'Budget', eta: '2 min', price: '₹45', seats: 3, color: '#A855F7',
+    id: 'auto', name: 'Auto', tag: 'Budget', seats: 3, color: '#A855F7',
+    baseRate: 20, perKm: 10, perMin: 1,
     icon: (
       <svg viewBox="0 0 64 28" fill="none" style={{width:'100%',height:'100%'}}>
         <ellipse cx="36" cy="25" rx="24" ry="3" fill="rgba(168,85,247,0.15)"/>
@@ -106,6 +110,7 @@ export default function Dashboard() {
   const [destSuggestions, setDestSuggestions] = useState([]);
   const [pickupCoords, setPickupCoords] = useState(null); 
   const [destCoords, setDestCoords] = useState(null);
+  const [tripDetails, setTripDetails] = useState({ distance: 0, duration: 0 });
 
   const destRef = useRef(null);
   const navigate = useNavigate();
@@ -208,6 +213,14 @@ export default function Dashboard() {
   };
 
   const ride = RIDE_OPTIONS.find(r => r.id === selectedRide);
+
+  // Calculates the real-time fare for each vehicle type
+  const calculateFare = (baseRate, perKm, perMin) => {
+    if (!tripDetails.distance || tripDetails.distance === 0) return baseRate;
+    const distanceCost = tripDetails.distance * perKm;
+    const timeCost = tripDetails.duration * perMin;
+    return Math.round(baseRate + distanceCost + timeCost);
+  };
 
   // --- RENDER ---
   return (
@@ -412,6 +425,7 @@ export default function Dashboard() {
           pickupCoords={pickupCoords} 
           destCoords={destCoords} 
           currentSheetState={sheet} 
+          setTripDetails={setTripDetails}
         />
       </div>
 
@@ -568,30 +582,35 @@ export default function Dashboard() {
           </div>
 
           <div className="db-ride-list">
-            {RIDE_OPTIONS.map(r => (
-              <div
-                key={r.id}
-                className={`db-ride-card${selectedRide === r.id ? ' selected' : ''}`}
-                style={{ '--card-accent': r.color }}
-                onClick={() => setSelectedRide(r.id)}
-              >
-                <div className="db-ride-car-wrap">{r.icon}</div>
-                <div className="db-ride-info">
-                  <div className="db-ride-name">{r.name}</div>
-                  <div className="db-ride-meta">
-                    <div className="db-ride-eta">⏱ {r.eta}</div>
-                    <div className="db-ride-tag">{r.tag}</div>
+            {RIDE_OPTIONS.map(r => {
+              const livePrice = calculateFare(r.baseRate, r.perKm, r.perMin);
+              const liveETA = tripDetails.duration > 0 ? `${tripDetails.duration} min` : '...';
+
+              return (
+                <div
+                  key={r.id}
+                  className={`db-ride-card${selectedRide === r.id ? ' selected' : ''}`}
+                  style={{ '--card-accent': r.color }}
+                  onClick={() => setSelectedRide(r.id)}
+                >
+                  <div className="db-ride-car-wrap">{r.icon}</div>
+                  <div className="db-ride-info">
+                    <div className="db-ride-name">{r.name}</div>
+                    <div className="db-ride-meta">
+                      <div className="db-ride-eta">⏱ {liveETA}</div>
+                      <div className="db-ride-tag">{r.tag}</div>
+                    </div>
+                    <div className="db-ride-seats">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+                      {r.seats} seats
+                    </div>
                   </div>
-                  <div className="db-ride-seats">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
-                    {r.seats} seats
+                  <div className="db-ride-price" style={{ color: selectedRide === r.id ? r.color : 'rgba(255,255,255,0.6)' }}>
+                    ₹{livePrice}
                   </div>
                 </div>
-                <div className="db-ride-price" style={{ color: selectedRide === r.id ? r.color : 'rgba(255,255,255,0.6)' }}>
-                  {r.price}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <button
@@ -601,7 +620,7 @@ export default function Dashboard() {
               boxShadow: `0 10px 30px rgba(${hexToRgb(ride?.color || '#00D4AA')}, 0.4)`,
             }}
           >
-            Confirm {ride?.name} · {ride?.price}
+            Confirm {ride?.name} · ₹{calculateFare(ride?.baseRate, ride?.perKm, ride?.perMin)}
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
           </button>
         </div>

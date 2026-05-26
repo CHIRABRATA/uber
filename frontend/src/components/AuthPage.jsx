@@ -78,7 +78,8 @@ export default function AuthPage({ defaultRole = 'user', defaultMode = 'login' }
         setMode('login');
       } else {
         // Redirect to dashboard upon successful login
-        navigate('/dashboard');
+        const dashboardUrl = role === 'captain' ? '/captain/dashboard' : '/dashboard';
+        navigate(dashboardUrl);
       }
     } catch (err) {
       setStatus({ type: 'error', message: err.message || 'Something went wrong' });

@@ -103,6 +103,41 @@ export default function CaptainDashboard({ captainId = 'CAP_001' }) {
   const [countdown, setCountdown] = useState(15);
   const [accepted, setAccepted] = useState(false);
   const [ripple, setRipple] = useState(false);
+  const [captainData, setCaptainData] = useState(null);
+  const [initials, setInitials] = useState('');
+
+  // Fetch captain profile from database
+  useEffect(() => {
+    const fetchCaptainProfile = async () => {
+      try {
+        const response = await fetch('/api/captains/profile', {
+          method: 'GET',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setCaptainData(data.captain);
+          
+          // Extract initials from captain name
+          const nameParts = data.captain.name.trim().split(' ');
+          const captainInitials = nameParts
+            .slice(0, 2)
+            .map(part => part.charAt(0).toUpperCase())
+            .join('');
+          setInitials(captainInitials || 'CAP');
+        } else {
+          console.error('Failed to fetch captain profile');
+          setInitials('CAP');
+        }
+      } catch (error) {
+        console.error('Error fetching captain profile:', error);
+        setInitials('CAP');
+      }
+    };
+
+    fetchCaptainProfile();
+  }, []);
 
   // Socket join + ride listener
   useEffect(() => {
@@ -676,7 +711,7 @@ export default function CaptainDashboard({ captainId = 'CAP_001' }) {
                 {online ? 'ONLINE' : 'OFFLINE'}
               </span>
             </div>
-            <div className="nav-avatar">AK</div>
+            <div className="nav-avatar">{initials}</div>
           </div>
         </nav>
 

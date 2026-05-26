@@ -4,6 +4,7 @@ const { body } = require('express-validator');
 
 // FIX: Import the captain controller instead of the user controller
 const captainController = require('../controllers/captain.controller');
+const authMiddleware = require('../middlewares/auth.middlewares');
 
 // 1. CAPTAIN REGISTRATION ROUTE (With detailed validations)
 router.post('/register', [
@@ -21,8 +22,11 @@ router.post('/login', [
     body('email').isEmail().withMessage('Please provide a valid email address'),
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long')
 ], captainController.login);
-//from here have logout route for captain 
 
+// 3. CAPTAIN LOGOUT ROUTE
 router.post('/logout', captainController.logout);
+
+// 4. GET CAPTAIN PROFILE ROUTE (Protected)
+router.get('/profile', authMiddleware.captain, captainController.getProfile);
 
 module.exports = router;

@@ -1,4 +1,5 @@
 const userModel = require('../models/user.model');
+const captainModel = require('../models/captain.model');
 const jwt = require('jsonwebtoken');
 const bycript = require('bcrypt');
 const TokenBlacklist = require('../models/tokenBlacklist.model');
@@ -33,6 +34,25 @@ module.exports = {
 
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
             req.user = decoded;
+            next();
+        } catch (error) {
+            console.error(error);
+            res.status(401).json({ message: 'Token is not valid' });
+        }
+    },
+    captain: async (req, res, next) => {
+        const token = module.exports.extractToken(req);
+        if (!token) {
+            return res.status(401).json({ message: 'No token, authorization denied' });
+        }   
+        try {
+            const blacklistedToken = await TokenBlacklist.findOne({ token });
+            if (blacklistedToken) {
+                return res.status(401).json({ message: 'Token has been revoked' });
+            }
+
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            req.captain = decoded;
             next();
         } catch (error) {
             console.error(error);

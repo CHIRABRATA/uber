@@ -123,5 +123,22 @@ module.exports = {
             console.error(error);
             return res.status(500).json({ message: 'Server error' });
         }
+    },
+
+    // 3. GET CAPTAIN PROFILE (Protected Route)
+    getProfile: async (req, res) => {
+        try {
+            const captainId = req.captain.id;
+            const captain = await captainModel.findById(captainId);
+            
+            if (!captain) {
+                return res.status(404).json({ message: 'Captain not found' });
+            }
+
+            return res.status(200).json({ captain });
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ message: 'Server error' });
+        }
     }
 };

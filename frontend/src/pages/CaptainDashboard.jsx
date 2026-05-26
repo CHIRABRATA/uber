@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
 // ─── Mock socket shim (replace with real socket.io-client in production) ───────
 const createMockSocket = () => {
@@ -41,36 +43,130 @@ const TRIP_HISTORY = [
   { id: 'T-0089', from: 'Gariahat Market', to: 'Tollygunge Metro', fare: 98, time: '8:11 AM', status: 'cancelled' },
 ];
 
-// ─── SVG Map Placeholder ──────────────────────────────────────────────────────
-const MapPlaceholder = () => (
-  <svg width="100%" height="100%" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg" style={{ position: 'absolute', inset: 0 }}>
-    <defs>
-      <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-        <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(0,212,170,0.06)" strokeWidth="1"/>
-      </pattern>
-      <radialGradient id="glow" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stopColor="#00D4AA" stopOpacity="0.08"/>
-        <stop offset="100%" stopColor="#0A0F1E" stopOpacity="0"/>
-      </radialGradient>
-    </defs>
-    <rect width="800" height="400" fill="#0A0F1E"/>
-    <rect width="800" height="400" fill="url(#grid)"/>
-    <rect width="800" height="400" fill="url(#glow)"/>
-    {/* Roads */}
-    <path d="M 0 200 Q 200 180 400 200 Q 600 220 800 200" stroke="rgba(0,212,170,0.15)" strokeWidth="14" fill="none" strokeLinecap="round"/>
-    <path d="M 0 200 Q 200 180 400 200 Q 600 220 800 200" stroke="rgba(0,212,170,0.05)" strokeWidth="20" fill="none" strokeLinecap="round"/>
-    <path d="M 300 0 Q 320 200 300 400" stroke="rgba(0,212,170,0.12)" strokeWidth="10" fill="none" strokeLinecap="round"/>
-    <path d="M 550 0 Q 530 200 550 400" stroke="rgba(0,212,170,0.08)" strokeWidth="8" fill="none" strokeLinecap="round"/>
-    <path d="M 100 0 Q 80 200 100 400" stroke="rgba(0,212,170,0.06)" strokeWidth="6" fill="none" strokeLinecap="round"/>
-    <path d="M 0 320 Q 400 290 800 320" stroke="rgba(0,212,170,0.07)" strokeWidth="8" fill="none" strokeLinecap="round"/>
-    <path d="M 0 80 Q 400 100 800 80" stroke="rgba(0,212,170,0.07)" strokeWidth="8" fill="none" strokeLinecap="round"/>
-    {/* Location ping */}
-    <circle cx="400" cy="200" r="28" fill="rgba(0,212,170,0.08)" className="ping-outer"/>
-    <circle cx="400" cy="200" r="16" fill="rgba(0,212,170,0.15)"/>
-    <circle cx="400" cy="200" r="8" fill="#00D4AA"/>
-    <circle cx="400" cy="200" r="4" fill="#fff"/>
-  </svg>
-);
+// ─── Leaflet Map Component ────────────────────────────────────────────────────
+const MapComponent = ({ onLocationUpdate }) => {
+  const mapRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+  const markerRef = useRef(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Initialize map only once
+    if (mapInstanceRef.current) return;
+
+    // Default location (Kolkata, India)
+    const defaultLocation = { lat: 22.5726, lng: 88.3639 };
+
+    // Initialize Leaflet map
+    const map = L.map(mapRef.current).setView([defaultLocation.lat, defaultLocation.lng], 14);
+
+    // Add OpenStreetMap tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors',
+      maxZoom: 19,
+    }).addTo(map);
+
+    // Custom marker icon with Uber-style styling
+    const customIcon = L.divIcon({
+      html: `
+        <div style="
+          width: 32px;
+          height: 32px;
+          background: linear-gradient(135deg, #00D4AA 0%, #00B890 100%);
+          border: 3px solid white;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: bold;
+          font-size: 16px;
+          color: #07080F;
+          box-shadow: 0 4px 12px rgba(0, 212, 170, 0.4);
+        ">🚗</div>
+      `,
+      iconSize: [32, 32],
+      className: 'custom-marker',
+    });
+
+    // Add initial marker at default location
+    markerRef.current = L.marker([defaultLocation.lat, defaultLocation.lng], { icon: customIcon })
+      .addTo(map)
+      .bindPopup('Your current location');
+
+    mapInstanceRef.current = map;
+    setLoading(false);
+
+    // Get current location using Geolocation API
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          
+          // Update map view to current location
+          map.setView([latitude, longitude], 14);
+          
+          // Update marker position
+          if (markerRef.current) {
+            markerRef.current.setLatLng([latitude, longitude]);
+            markerRef.current.setPopupContent(`📍 You are here`);
+          }
+
+          // Notify parent component of location update
+          if (onLocationUpdate) {
+            onLocationUpdate({ lat: latitude, lng: longitude });
+          }
+        },
+        (error) => {
+          console.warn('Geolocation error:', error);
+          // Keep default location if geolocation fails
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 0,
+        }
+      );
+
+      // Watch position for continuous updates
+      const watchId = navigator.geolocation.watchPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          
+          // Update marker without moving map view
+          if (markerRef.current) {
+            markerRef.current.setLatLng([latitude, longitude]);
+          }
+
+          // Update parent component
+          if (onLocationUpdate) {
+            onLocationUpdate({ lat: latitude, lng: longitude });
+          }
+        },
+        (error) => console.warn('Watch position error:', error),
+        {
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 0,
+        }
+      );
+
+      // Cleanup watch position on unmount
+      return () => {
+        navigator.geolocation.clearWatch(watchId);
+      };
+    }
+  }, [onLocationUpdate]);
+
+  return (
+    <div ref={mapRef} style={{ 
+      width: '100%', 
+      height: '100%', 
+      position: 'absolute', 
+      inset: 0,
+      zIndex: 1 
+    }} />
+  );
+};
 
 // ─── Circular Progress Ring ───────────────────────────────────────────────────
 const RingTimer = ({ countdown, total = 15 }) => {
@@ -105,6 +201,7 @@ export default function CaptainDashboard({ captainId = 'CAP_001' }) {
   const [ripple, setRipple] = useState(false);
   const [captainData, setCaptainData] = useState(null);
   const [initials, setInitials] = useState('');
+  const [currentLocation, setCurrentLocation] = useState({ lat: 22.5726, lng: 88.3639, address: 'Park Street, Kolkata' });
 
   // Fetch captain profile from database
   useEffect(() => {
@@ -166,6 +263,10 @@ export default function CaptainDashboard({ captainId = 'CAP_001' }) {
   };
 
   const handleReject = () => setActiveRequest(null);
+
+  const handleLocationUpdate = ({ lat, lng }) => {
+    setCurrentLocation(prev => ({ ...prev, lat, lng }));
+  };
 
   const statusColor = countdown > 8 ? '#00D4AA' : countdown > 4 ? '#FFB800' : '#FF3B30';
 
@@ -694,6 +795,55 @@ export default function CaptainDashboard({ captainId = 'CAP_001' }) {
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(0,212,170,0.2); border-radius: 2px; }
+
+        /* Leaflet Map Styles */
+        .leaflet-container {
+          background: #0A0F1E;
+          font-family: 'DM Sans', sans-serif;
+        }
+        .leaflet-popup-content-wrapper {
+          background: rgba(10,15,30,0.95);
+          border: 1px solid rgba(0,212,170,0.2);
+          border-radius: 8px;
+          color: #fff;
+        }
+        .leaflet-popup-tip {
+          background: rgba(10,15,30,0.95);
+        }
+        .leaflet-popup-content {
+          color: #fff;
+          font-size: 13px;
+          margin: 8px;
+        }
+        .leaflet-control-attribution {
+          background: rgba(10,15,30,0.7);
+          border: 1px solid rgba(0,212,170,0.1);
+          color: rgba(255,255,255,0.5);
+          font-size: 11px;
+        }
+        .leaflet-control-attribution a {
+          color: #00D4AA;
+          text-decoration: none;
+        }
+        .leaflet-control-zoom {
+          border: 1px solid rgba(0,212,170,0.2);
+          border-radius: 8px;
+          overflow: hidden;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .leaflet-control-zoom-in, .leaflet-control-zoom-out {
+          background: rgba(10,15,30,0.8);
+          color: #00D4AA;
+          border-bottom: 1px solid rgba(0,212,170,0.2);
+          font-weight: bold;
+          padding: 8px 12px;
+        }
+        .leaflet-control-zoom-out {
+          border-bottom: none;
+        }
+        .leaflet-control-zoom-in:hover, .leaflet-control-zoom-out:hover {
+          background: rgba(0,212,170,0.1);
+        }
       `}</style>
 
       <div className="cap-root">
@@ -759,10 +909,10 @@ export default function CaptainDashboard({ captainId = 'CAP_001' }) {
         <main className="cap-main">
           {/* Map */}
           <div className="map-area">
-            <MapPlaceholder />
+            <MapComponent onLocationUpdate={handleLocationUpdate} />
             <div className="map-overlay-info">
               <div className="map-location-label">Current Location</div>
-              <div className="map-location-value">Park Street, Kolkata</div>
+              <div className="map-location-value">{currentLocation.address}</div>
             </div>
             {online && (
               <div className="map-status-pill">
